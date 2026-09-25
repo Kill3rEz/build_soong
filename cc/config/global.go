@@ -694,8 +694,34 @@ func setSdclangVars() {
 	sdclangConfigPath := os.Getenv("SDCLANG_CONFIG")
 	sdclangSA := os.Getenv("SDCLANG_SA_ENABLED")
 
+	// Register these pctx variables unconditionally. sdclangMakeVars() exports
+	// SDCLANG_PATH / SDCLANG_COMMON_FLAGS to make on every build, so the
+	// variables must always exist even when we bail out below (sdclang off).
+	// The closures read sdclangPath/sdclangFlags lazily, so they pick up the
+	// parsed values when sdclang is enabled and empty strings when it isn't.
+	pctx.VariableFunc("SDClangBin", func(ctx android.PackageVarContext) string {
+		if override := ctx.Config().Getenv("SDCLANG_PATH"); override != "" {
+			return override
+		}
+		return sdclangPath
+	})
+	pctx.VariableFunc("SDClangFlags", func(ctx android.PackageVarContext) string {
+		if override := ctx.Config().Getenv("SDCLANG_COMMON_FLAGS"); override != "" {
+			return override
+		}
+		return sdclangAEFlag + " " + sdclangFlags
+	})
+
 	// Bail out if SDCLANG_CONFIG isn't set
 	if sdclangConfigPath == "" {
+		return
+	}
+
+	// Bail out if SDCLANG_CONFIG doesn't point at a regular file. When sdclang
+	// is disabled (AOSPA ships vendor/qcom/sdclang on the empty 'disabled'
+	// branch) these env vars can leak the build top dir; opening a directory
+	// and JSON-decoding it panics. Treat that as "sdclang off".
+	if fi, err := os.Stat(sdclangConfigPath); err != nil || fi.IsDir() {
 		return
 	}
 
@@ -788,22 +814,6 @@ func setSdclangVars() {
 	if envPath := os.Getenv("SDCLANG_PATH"); SDClang && sdclangPath == "" && envPath == "" {
 		panic("SDCLANG_PATH can not be empty")
 	}
-
-	// Override SDCLANG_PATH if the variable is set in the environment
-	pctx.VariableFunc("SDClangBin", func(ctx android.PackageVarContext) string {
-		if override := ctx.Config().Getenv("SDCLANG_PATH"); override != "" {
-			return override
-		}
-		return sdclangPath
-	})
-
-	// Override SDCLANG_COMMON_FLAGS if the variable is set in the environment
-	pctx.VariableFunc("SDClangFlags", func(ctx android.PackageVarContext) string {
-		if override := ctx.Config().Getenv("SDCLANG_COMMON_FLAGS"); override != "" {
-			return override
-		}
-		return sdclangAEFlag + " " + sdclangFlags
-	})
 
 	SDClangPath = sdclangPath
 	// Find the path to SDLLVM's ASan libraries
