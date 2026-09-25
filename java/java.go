@@ -783,6 +783,15 @@ func sdkDeps(ctx android.BottomUpMutatorContext, sdkContext android.SdkContext, 
 	if sdkDep.systemModules != "" {
 		ctx.AddVariationDependencies(nil, systemModulesTag, sdkDep.systemModules)
 	}
+
+	// PenguinOS/lineage-sdk: org.lineageos.platform-res is a core_platform
+	// resource-only package (like framework-res) and needs framework-res as an
+	// aapt2 include so that android:* attributes in its manifest resolve.
+	// core_platform's sdkDep has no frameworkResModule, so force the dependency
+	// here (mirrors the LineageOS soong patch).
+	if ctx.ModuleName() == "org.lineageos.platform-res" {
+		ctx.AddVariationDependencies(nil, frameworkResTag, "framework-res")
+	}
 }
 
 type deps struct {

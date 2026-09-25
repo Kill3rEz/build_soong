@@ -61,6 +61,12 @@ kernel_headers {
     visibility: ["//visibility:public"],
 }
 
+// NB: generated_kernel_headers / audio_kernel_headers are now provided by the
+// imported Lineage kernel-header mechanism (vendor/lineage/build/soong via
+// generated_kernel_header_defaults + generated_kernel_includes) and the
+// hardware/google/pixel/kernel_headers aliases, which actually run
+// `make headers_install` and export the SM8750 display/audio uapi headers.
+
 cc_genrule {
     name: "host_bionic_linker_asm",
     host_supported: true,

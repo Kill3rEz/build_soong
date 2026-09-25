@@ -232,6 +232,15 @@ type ProductVariables struct {
 	BuildThumbprintFile        *string `json:",omitempty"`
 	DisplayBuildNumber         *bool   `json:",omitempty"`
 
+	// AOSPA version strings (set by build/make/core/soong_config.mk from
+	// vendor/aospa/target/product/version.mk). Declared here because the
+	// Project-PenguinOS build_soong fork otherwise lacks these fields and
+	// soong_build rejects soong.variables with "unknown field".
+	AospaDisplayVersion *string `json:",omitempty"`
+	AospaMajorVersion   *string `json:",omitempty"`
+	AospaMinorVersion   *string `json:",omitempty"`
+	AospaBuildVariant   *string `json:",omitempty"`
+
 	Platform_base_os                       *string  `json:",omitempty"`
 	Platform_base_sdk_extension_version    *int     `json:",omitempty"`
 	Platform_display_version_name          *string  `json:",omitempty"`
